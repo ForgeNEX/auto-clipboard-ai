@@ -20,6 +20,8 @@ try:
         API_URL = config.get("API_URL", "http://localhost:11434/api/chat")
         MODEL = config.get("MODEL", "llama3.2")
         DEFAULT_PROMPT = config.get("DEFAULT_PROMPT", "Por favor, procesa el siguiente texto: {texto}")
+        PROMPT_TRANSLATE = config.get("PROMPT_TRANSLATE", "Traduce al español: {texto}")
+        PROMPT_SUMMARY = config.get("PROMPT_SUMMARY", "Crea un sumario del siguiente texto: {texto}")
         HOTKEY = config.get("HOTKEY", "ctrl+alt+shift+o")
 except FileNotFoundError:
     print(f"Error: Archivo '{CONFIG_FILE}' no encontrado.")
@@ -30,6 +32,7 @@ except json.JSONDecodeError as e:
 
 # Historial de mensajes
 message_history = []
+current_prompt = DEFAULT_PROMPT  # Prompt actual
 
 def query_ollama_api(input_text):
     global message_history
@@ -37,7 +40,7 @@ def query_ollama_api(input_text):
 
     request_body = {
         "model": MODEL,
-        "messages": [{"role": "system", "content": DEFAULT_PROMPT}] + message_history,
+        "messages": [{"role": "system", "content": current_prompt}] + message_history,
         "stream": False,
         "options": {
             "top_p": 0.7,
@@ -61,7 +64,8 @@ def query_ollama_api(input_text):
 def process_clipboard():
     original_text = pyperclip.paste()
     if original_text.strip():
-        processed_text = query_ollama_api(original_text)
+        prompt_text = current_prompt.replace("{texto}", original_text)
+        processed_text = query_ollama_api(prompt_text)
         pyperclip.copy(processed_text)
 
 def start_keyboard_listener():
@@ -71,23 +75,10 @@ def start_keyboard_listener():
     while True:
         time.sleep(0.1)
 
-def update_hotkey(new_hotkey):
-    global HOTKEY
-    keyboard.remove_hotkey(HOTKEY)
-    HOTKEY = new_hotkey
-    keyboard.add_hotkey(HOTKEY, process_clipboard)
-    print(f"Combinación de teclas cambiada a {HOTKEY}.")
-
-    # Actualizar el archivo de configuración
-    try:
-        with open(CONFIG_FILE, "r") as config_file:
-            config = json.load(config_file)
-        config["HOTKEY"] = new_hotkey
-        with open(CONFIG_FILE, "w") as config_file:
-            json.dump(config, config_file, indent=4)
-        print("Archivo de configuración actualizado.")
-    except Exception as e:
-        print(f"Error al actualizar '{CONFIG_FILE}': {e}")
+def update_prompt(new_prompt):
+    global current_prompt
+    current_prompt = new_prompt
+    print(f"Prompt actualizado a: {current_prompt}")
 
 def create_image():
     width, height = 64, 64
@@ -120,9 +111,11 @@ def change_hotkey(icon, item):
 def tray_app():
     icon = Icon(
         "Clipboard AI",
-        create_image(),
+        Image.open("icon.ico"),
         menu=Menu(
-            MenuItem("Cambiar Combinación de Teclas", change_hotkey),
+            MenuItem("Responder a Chats", lambda: update_prompt(DEFAULT_PROMPT)),
+            MenuItem("Traducir", lambda: update_prompt(PROMPT_TRANSLATE)),
+            MenuItem("Crear Sumario", lambda: update_prompt(PROMPT_SUMMARY)),
             MenuItem("Editar Configuración", open_config_file),
             MenuItem("Salir", on_quit)
         )
