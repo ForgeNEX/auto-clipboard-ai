@@ -7,19 +7,25 @@ from PIL import Image, ImageDraw
 import threading
 import sys
 import json
+import os
+import subprocess
+
+# Ruta del archivo de configuración
+CONFIG_FILE = "config.json"
 
 # Cargar configuración desde config.json
 try:
-    with open("config.json", "r") as config_file:
+    with open(CONFIG_FILE, "r") as config_file:
         config = json.load(config_file)
         API_URL = config.get("API_URL", "http://localhost:11434/api/chat")
         MODEL = config.get("MODEL", "llama3.2")
         DEFAULT_PROMPT = config.get("DEFAULT_PROMPT", "Por favor, procesa el siguiente texto: {texto}")
+        HOTKEY = config.get("HOTKEY", "ctrl+alt+shift+o")
 except FileNotFoundError:
-    print("Error: Archivo 'config.json' no encontrado.")
+    print(f"Error: Archivo '{CONFIG_FILE}' no encontrado.")
     sys.exit(1)
 except json.JSONDecodeError as e:
-    print(f"Error: No se pudo parsear 'config.json': {e}")
+    print(f"Error: No se pudo parsear '{CONFIG_FILE}': {e}")
     sys.exit(1)
 
 # Historial de mensajes
@@ -59,10 +65,29 @@ def process_clipboard():
         pyperclip.copy(processed_text)
 
 def start_keyboard_listener():
-    keyboard.add_hotkey("ctrl+alt+shift+o", process_clipboard)
-    print("Presiona Ctrl+Alt+Shift+O para procesar el texto en el clipboard.")
+    global HOTKEY
+    keyboard.add_hotkey(HOTKEY, process_clipboard)
+    print(f"Presiona {HOTKEY} para procesar el texto en el clipboard.")
     while True:
         time.sleep(0.1)
+
+def update_hotkey(new_hotkey):
+    global HOTKEY
+    keyboard.remove_hotkey(HOTKEY)
+    HOTKEY = new_hotkey
+    keyboard.add_hotkey(HOTKEY, process_clipboard)
+    print(f"Combinación de teclas cambiada a {HOTKEY}.")
+
+    # Actualizar el archivo de configuración
+    try:
+        with open(CONFIG_FILE, "r") as config_file:
+            config = json.load(config_file)
+        config["HOTKEY"] = new_hotkey
+        with open(CONFIG_FILE, "w") as config_file:
+            json.dump(config, config_file, indent=4)
+        print("Archivo de configuración actualizado.")
+    except Exception as e:
+        print(f"Error al actualizar '{CONFIG_FILE}': {e}")
 
 def create_image():
     width, height = 64, 64
@@ -76,11 +101,29 @@ def on_quit(icon, item):
     icon.stop()
     sys.exit()
 
+def open_config_file(icon, item):
+    try:
+        if os.name == 'nt':  # Windows
+            os.startfile(CONFIG_FILE)
+        elif os.name == 'posix':  # macOS/Linux
+            subprocess.call(["xdg-open", CONFIG_FILE])
+        else:
+            print("Sistema operativo no soportado para abrir el archivo.")
+    except Exception as e:
+        print(f"Error al abrir '{CONFIG_FILE}': {e}")
+
+def change_hotkey(icon, item):
+    new_hotkey = input("Introduce la nueva combinación de teclas (ejemplo: ctrl+shift+x): ").strip()
+    if new_hotkey:
+        update_hotkey(new_hotkey)
+
 def tray_app():
     icon = Icon(
         "Clipboard AI",
         create_image(),
         menu=Menu(
+            MenuItem("Cambiar Combinación de Teclas", change_hotkey),
+            MenuItem("Editar Configuración", open_config_file),
             MenuItem("Salir", on_quit)
         )
     )
