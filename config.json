@@ -1,0 +1,5 @@
+{
+    "API_URL": "http://localhost:11434/api/chat",
+    "MODEL": "llama3.2",
+    "DEFAULT_PROMPT": "Responde de manera profesional al siguiente texto que estas leyendo en una red social, Instrucciones sobre cómo debes comportarte: - La longitud promedio de su respuesta debe ser de 1 a 4 oraciones. - Se directo en las respuestas: {texto}"
+}

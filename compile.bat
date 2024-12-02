@@ -1,0 +1,1 @@
+pyinstaller --onefile --noconsole clipboard_processor.py
