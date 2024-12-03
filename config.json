@@ -2,7 +2,9 @@
     "API_URL": "http://localhost:11434/api/chat",
     "MODEL": "llama3.2",
     "DEFAULT_PROMPT": "Responde de manera profesional al siguiente texto que estas leyendo en una red social, Instrucciones sobre cómo debes comportarte: - La longitud promedio de su respuesta debe ser de 1 a 4 oraciones. - Se directo en las respuestas: {texto}",
-    "PROMPT_TRANSLATE": "Traduce al español y devuelve solamente el texto traducido: {texto}",
+    "PROMPT_TRANSLATE": "Traduce al ingles y devuelve solamente el texto traducido: {texto}",
     "PROMPT_SUMMARY": "Crea un sumario pequeño y comprensible del siguiente texto: {texto}",
-    "HOTKEY": "ctrl+alt+shift+g"
+    "HOTKEY_CHAT": "ctrl+alt+shift+c",
+    "HOTKEY_TRANSLATE": "ctrl+alt+shift+t",
+    "HOTKEY_SUMMARY": "ctrl+alt+shift+s"
 }

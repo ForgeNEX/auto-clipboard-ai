@@ -9,9 +9,12 @@ import sys
 import json
 import os
 import subprocess
+import winsound  # Para reproducir sonidos en Windows
 
 # Ruta del archivo de configuración
 CONFIG_FILE = "config.json"
+SOUND_SUCCESS = "recording-end.wav"
+SOUND_ERROR = "recording-cancel.wav"
 
 # Cargar configuración desde config.json
 try:
@@ -22,7 +25,9 @@ try:
         DEFAULT_PROMPT = config.get("DEFAULT_PROMPT", "Por favor, procesa el siguiente texto: {texto}")
         PROMPT_TRANSLATE = config.get("PROMPT_TRANSLATE", "Traduce al español: {texto}")
         PROMPT_SUMMARY = config.get("PROMPT_SUMMARY", "Crea un sumario del siguiente texto: {texto}")
-        HOTKEY = config.get("HOTKEY", "ctrl+alt+shift+o")
+        HOTKEY_CHAT = config.get("HOTKEY_CHAT", "ctrl+alt+shift+1")
+        HOTKEY_TRANSLATE = config.get("HOTKEY_TRANSLATE", "ctrl+alt+shift+2")
+        HOTKEY_SUMMARY = config.get("HOTKEY_SUMMARY", "ctrl+alt+shift+3")
 except FileNotFoundError:
     print(f"Error: Archivo '{CONFIG_FILE}' no encontrado.")
     sys.exit(1)
@@ -32,7 +37,13 @@ except json.JSONDecodeError as e:
 
 # Historial de mensajes
 message_history = []
-current_prompt = DEFAULT_PROMPT  # Prompt actual
+current_prompt = DEFAULT_PROMPT  # Prompt inicial
+
+def play_sound(sound_file):
+    try:
+        winsound.PlaySound(sound_file, winsound.SND_FILENAME)
+    except Exception as e:
+        print(f"Error al reproducir el sonido '{sound_file}': {e}")
 
 def query_ollama_api(input_text):
     global message_history
@@ -66,19 +77,28 @@ def process_clipboard():
     if original_text.strip():
         prompt_text = current_prompt.replace("{texto}", original_text)
         processed_text = query_ollama_api(prompt_text)
-        pyperclip.copy(processed_text)
+        if "Error" not in processed_text:
+            pyperclip.copy(processed_text)
+            play_sound(SOUND_SUCCESS)
+        else:
+            print(processed_text)
+            play_sound(SOUND_ERROR)
+
+def set_prompt_and_process(prompt):
+    global current_prompt
+    current_prompt = prompt
+    process_clipboard()
 
 def start_keyboard_listener():
-    global HOTKEY
-    keyboard.add_hotkey(HOTKEY, process_clipboard)
-    print(f"Presiona {HOTKEY} para procesar el texto en el clipboard.")
+    keyboard.add_hotkey(HOTKEY_CHAT, lambda: set_prompt_and_process(DEFAULT_PROMPT))
+    keyboard.add_hotkey(HOTKEY_TRANSLATE, lambda: set_prompt_and_process(PROMPT_TRANSLATE))
+    keyboard.add_hotkey(HOTKEY_SUMMARY, lambda: set_prompt_and_process(PROMPT_SUMMARY))
+    print(f"Hotkeys activados:")
+    print(f" - Responder a chats: {HOTKEY_CHAT}")
+    print(f" - Traducir: {HOTKEY_TRANSLATE}")
+    print(f" - Crear sumario: {HOTKEY_SUMMARY}")
     while True:
         time.sleep(0.1)
-
-def update_prompt(new_prompt):
-    global current_prompt
-    current_prompt = new_prompt
-    print(f"Prompt actualizado a: {current_prompt}")
 
 def create_image():
     width, height = 64, 64
@@ -103,19 +123,14 @@ def open_config_file(icon, item):
     except Exception as e:
         print(f"Error al abrir '{CONFIG_FILE}': {e}")
 
-def change_hotkey(icon, item):
-    new_hotkey = input("Introduce la nueva combinación de teclas (ejemplo: ctrl+shift+x): ").strip()
-    if new_hotkey:
-        update_hotkey(new_hotkey)
-
 def tray_app():
     icon = Icon(
         "Clipboard AI",
         Image.open("icon.ico"),
         menu=Menu(
-            MenuItem("Responder a Chats", lambda: update_prompt(DEFAULT_PROMPT)),
-            MenuItem("Traducir", lambda: update_prompt(PROMPT_TRANSLATE)),
-            MenuItem("Crear Sumario", lambda: update_prompt(PROMPT_SUMMARY)),
+            MenuItem("Responder a Chats", lambda: set_prompt_and_process(DEFAULT_PROMPT)),
+            MenuItem("Traducir", lambda: set_prompt_and_process(PROMPT_TRANSLATE)),
+            MenuItem("Crear Sumario", lambda: set_prompt_and_process(PROMPT_SUMMARY)),
             MenuItem("Editar Configuración", open_config_file),
             MenuItem("Salir", on_quit)
         )
