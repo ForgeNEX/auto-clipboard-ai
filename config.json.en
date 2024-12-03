@@ -1,0 +1,10 @@
+{
+    "API_URL": "http://localhost:11434/api/chat",
+    "MODEL": "llama3.2",
+    "DEFAULT_PROMPT": "Write a professional and appropriate response to the following text you are reading on a social network. Instructions: - Show interest and empathy toward the topic. - Keep a positive tone, but avoid over-exaggeration. - Limit your response to 1-4 sentences to remain concise and to the point: {texto}",
+    "PROMPT_TRANSLATE": "Translate the following text written in English to Spanish. Ensure the tone remains professional and natural, suitable for a professional setting on social networks: {texto}",
+    "PROMPT_SUMMARY": "Create a clear and concise summary of the following text, focusing on highlighting the key points in a brief and easy-to-understand way. The summary should capture the essence of the text without requiring a full read: {texto}",
+    "HOTKEY_CHAT": "ctrl+alt+shift+c",
+    "HOTKEY_TRANSLATE": "ctrl+alt+shift+t",
+    "HOTKEY_SUMMARY": "ctrl+alt+shift+s"
+}

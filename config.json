@@ -1,9 +1,9 @@
 {
     "API_URL": "http://localhost:11434/api/chat",
     "MODEL": "llama3.2",
-    "DEFAULT_PROMPT": "Responde de manera profesional al siguiente texto que estas leyendo en una red social, Instrucciones sobre cómo debes comportarte: - La longitud promedio de su respuesta debe ser de 1 a 4 oraciones. - Se directo en las respuestas: {texto}",
-    "PROMPT_TRANSLATE": "Traduce al ingles y devuelve solamente el texto traducido: {texto}",
-    "PROMPT_SUMMARY": "Crea un sumario pequeño y comprensible del siguiente texto: {texto}",
+    "DEFAULT_PROMPT": "Escribe una respuesta profesional y adecuada al siguiente texto que estás leyendo en una red social. Instrucciones: - Muestra interés y empatía hacia el tema. - Mantén un tono positivo, pero sin exagerar. - Limita tu respuesta a 1-4 oraciones para ser breve y directo: {texto}",
+    "PROMPT_TRANSLATE": "Traduce el siguiente texto escrito en español al inglés. Asegúrate de que el tono sea profesional y natural, adaptado para un entorno profesional en redes sociales: {texto}",
+    "PROMPT_SUMMARY": "Crea un resumen claro y comprensible del siguiente texto, enfocado en destacar los puntos clave de manera breve. El resumen debe ser útil para comprender la esencia del texto sin leerlo completo: {texto}",
     "HOTKEY_CHAT": "ctrl+alt+shift+c",
     "HOTKEY_TRANSLATE": "ctrl+alt+shift+t",
     "HOTKEY_SUMMARY": "ctrl+alt+shift+s"
